@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MarkJSInput Test Application</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 20px;
+                color: #fff;
+            }
+
+            .container {
+                max-width: 1400px;
+                margin: 0 auto;
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+
+            .header h1 {
+                font-size: 2.5em;
+                margin-bottom: 10px;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+
+            .header p {
+                font-size: 1.2em;
+                opacity: 0.9;
+            }
+
+            .main-content {
+                display: flex;
+                gap: 20px;
+                flex-wrap: wrap;
+            }
+
+            .canvas-container {
+                flex: 1;
+                min-width: 300px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 15px;
+                padding: 20px;
+                -webkit-backdrop-filter: blur(10px);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .canvas-wrapper {
+                position: relative;
+                width: 100%;
+                max-width: 1280px;
+                margin: 0 auto;
+            }
+
+            .canvas-wrapper::before {
+                content: '';
+                display: block;
+                padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            }
+
+            #gameCanvas {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border-radius: 10px;
+                background: #1a1a2e;
+                cursor: crosshair;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            }
+
+            .info-panel {
+                width: 350px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 15px;
+                padding: 20px;
+                -webkit-backdrop-filter: blur(10px);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                height: fit-content;
+            }
+
+            .info-section {
+                margin-bottom: 25px;
+            }
+
+            .info-section h3 {
+                font-size: 1.2em;
+                margin-bottom: 10px;
+                color: #ffd700;
+                border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+                padding-bottom: 5px;
+            }
+
+            .info-item {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 8px;
+                padding: 5px 10px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 5px;
+                font-family: 'Courier New', monospace;
+                font-size: 0.9em;
+            }
+
+            .info-label {
+                color: #e0e0e0;
+            }
+
+            .info-value {
+                color: #00ff88;
+                font-weight: bold;
+            }
+
+            .status-indicator {
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                margin-right: 8px;
+            }
+
+            .status-active {
+                background: #00ff88;
+                box-shadow: 0 0 8px #00ff88;
+            }
+
+            .status-inactive {
+                background: #666;
+            }
+
+            .fps-counter {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(0, 0, 0, 0.8);
+                color: #00ff88;
+                padding: 10px 15px;
+                border-radius: 8px;
+                font-family: 'Courier New', monospace;
+                font-size: 1.1em;
+                border: 1px solid rgba(0, 255, 136, 0.3);
+            }
+
+            @media (max-width: 768px) {
+                .main-content {
+                    flex-direction: column;
+                }
+
+                .info-panel {
+                    width: 100%;
+                }
+
+                .header h1 {
+                    font-size: 2em;
+                }
+
+                .fps-counter {
+                    position: relative;
+                    top: auto;
+                    right: auto;
+                    margin-bottom: 20px;
+                    display: inline-block;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header class="header">
+                <h1>🎮 MarkJSInput Test Application</h1>
+                <p>Interactive demonstration of canvas input handling</p>
+            </header>
+
+            <div class="fps-counter" id="fpsCounter">FPS: --</div>
+
+            <div class="main-content">
+                <div class="canvas-container">
+                    <div class="canvas-wrapper">
+                        <canvas id="gameCanvas" width="1280" height="720"></canvas>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <div class="info-section">
+                        <h3>🖱️ Mouse Input</h3>
+                        <div class="info-item">
+                            <span class="info-label">Position:</span>
+                            <span class="info-value" id="mousePos">0, 0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Buttons:</span>
+                            <span class="info-value" id="mouseButtons">None</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status:</span>
+                            <span><span class="status-indicator" id="mouseStatus"></span><span id="mouseStatusText">Inactive</span></span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>⌨️ Keyboard Input</h3>
+                        <div class="info-item">
+                            <span class="info-label">Active Keys:</span>
+                            <span class="info-value" id="activeKeys">None</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Key:</span>
+                            <span class="info-value" id="lastKey">None</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status:</span>
+                            <span><span class="status-indicator" id="keyboardStatus"></span><span id="keyboardStatusText">Inactive</span></span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>👆 Touch Input</h3>
+                        <div class="info-item">
+                            <span class="info-label">Position:</span>
+                            <span class="info-value" id="touchPos">None</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Active:</span>
+                            <span class="info-value" id="touchActive">No</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status:</span>
+                            <span><span class="status-indicator" id="touchStatus"></span><span id="touchStatusText">Inactive</span></span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>🎮 Gamepad Input</h3>
+                        <div class="info-item">
+                            <span class="info-label">Connected:</span>
+                            <span class="info-value" id="gamepadConnected">No</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Left Stick:</span>
+                            <span class="info-value" id="leftStick">0.0, 0.0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Right Stick:</span>
+                            <span class="info-value" id="rightStick">0.0, 0.0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Button:</span>
+                            <span class="info-value" id="gamepadButton">None</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="module">
+            import { MarkJSInput } from './markjsinput.js';
+
+            class TestApplication {
+                constructor() {
+                    this.canvas = document.getElementById('gameCanvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    this.input = new MarkJSInput(this.canvas);
+
+                    // Visual elements
+                    this.particles = [];
+                    this.trails = [];
+                    this.maxParticles = 100;
+                    this.maxTrails = 50;
+
+                    // Input state tracking
+                    this.mouseActive = false;
+                    this.touchActive = false;
+                    this.keyboardActive = false;
+                    this.activeKeys = new Set();
+                    this.lastKey = 'None';
+                    this.isDrawing = false;
+                    this.lastDrawPos = { x: 0, y: 0 };
+
+                    // FPS tracking
+                    this.fps = 0;
+                    this.frameCount = 0;
+                    this.lastFpsTime = performance.now();
+
+                    // Colors for different input types
+                    this.colors = {
+                        mouse: '#00ff88',
+                        touch: '#ff4757',
+                        keyboard: '#ffd700',
+                        gamepad: '#3742fa',
+                    };
+
+                    this.setupEventHandlers();
+                    this.setupCanvas();
+                    this.startGameLoop();
+                }
+
+                setupCanvas() {
+                    this.ctx.fillStyle = '#1a1a2e';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.drawGrid();
+                    this.drawWelcomeMessage();
+                }
+
+                drawGrid() {
+                    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                    this.ctx.lineWidth = 1;
+
+                    const gridSize = 50;
+                    for (let x = 0; x < this.canvas.width; x += gridSize) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(x, 0);
+                        this.ctx.lineTo(x, this.canvas.height);
+                        this.ctx.stroke();
+                    }
+
+                    for (let y = 0; y < this.canvas.height; y += gridSize) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(0, y);
+                        this.ctx.lineTo(this.canvas.width, y);
+                        this.ctx.stroke();
+                    }
+                }
+
+                drawWelcomeMessage() {
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    this.ctx.font = 'bold 48px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('MarkJSInput Test Canvas', this.canvas.width / 2, this.canvas.height / 2 - 50);
+
+                    this.ctx.font = '24px Arial';
+                    this.ctx.fillText('Interact to see input handling in action!', this.canvas.width / 2, this.canvas.height / 2 + 20);
+
+                    this.ctx.font = '18px Arial';
+                    this.ctx.fillText(
+                        'Mouse: Draw particles • Keyboard: Colored effects • Touch: Red trails • Gamepad: Blue effects',
+                        this.canvas.width / 2,
+                        this.canvas.height / 2 + 60
+                    );
+                }
+
+                setupEventHandlers() {
+                    const inputHandler = {
+                        // Mouse events
+                        onMouseMove: (x, y) => {
+                            this.mouseActive = true;
+                            this.updateMouseDisplay(x, y);
+
+                            if (this.isDrawing) {
+                                this.addParticle(x, y, this.colors.mouse, 'mouse');
+                                this.addTrail(this.lastDrawPos.x, this.lastDrawPos.y, x, y, this.colors.mouse);
+                            }
+                            this.lastDrawPos = { x, y };
+                        },
+
+                        onMouseDown: (x, y, button) => {
+                            this.isDrawing = true;
+                            this.lastDrawPos = { x, y };
+                            this.addParticle(x, y, this.colors.mouse, 'mouse', 20);
+                            this.updateMouseButtons(`Button ${button} down`);
+                        },
+
+                        onMouseUp: (x, y, button) => {
+                            this.isDrawing = false;
+                            this.addParticle(x, y, this.colors.mouse, 'mouse', 15);
+                            this.updateMouseButtons(`Button ${button} up`);
+                        },
+
+                        onMouseClick: (x, y, button) => {
+                            this.addExplosion(x, y, this.colors.mouse, 10);
+                        },
+
+                        onMouseEnter: (x, y) => {
+                            this.mouseActive = true;
+                            this.updateMouseStatus(true);
+                        },
+
+                        // Keyboard events
+                        onKeyDown: (event) => {
+                            event.preventDefault(); // Prevent default actions like F5 refresh
+
+                            this.keyboardActive = true;
+                            this.activeKeys.add(event.key);
+                            this.lastKey = event.key;
+                            this.updateKeyboardDisplay();
+
+                            // Create keyboard effect
+                            const x = Math.random() * this.canvas.width;
+                            const y = Math.random() * this.canvas.height;
+                            this.addExplosion(x, y, this.colors.keyboard, 15);
+                        },
+
+                        onKeyUp: (event) => {
+                            event.preventDefault(); // Prevent default actions
+
+                            this.activeKeys.delete(event.key);
+                            this.updateKeyboardDisplay();
+
+                            if (this.activeKeys.size === 0) {
+                                setTimeout(() => {
+                                    this.keyboardActive = false;
+                                    this.updateKeyboardStatus(false);
+                                }, 1000);
+                            }
+                        },
+
+                        // Touch events
+                        onTouchStart: (x, y) => {
+                            this.touchActive = true;
+                            this.isDrawing = true;
+                            this.lastDrawPos = { x, y };
+                            this.updateTouchDisplay(x, y, true);
+                            this.addParticle(x, y, this.colors.touch, 'touch', 25);
+                        },
+
+                        onTouchMove: (x, y) => {
+                            this.updateTouchDisplay(x, y, true);
+                            if (this.isDrawing) {
+                                this.addParticle(x, y, this.colors.touch, 'touch');
+                                this.addTrail(this.lastDrawPos.x, this.lastDrawPos.y, x, y, this.colors.touch);
+                            }
+                            this.lastDrawPos = { x, y };
+                        },
+
+                        onTouchEnd: (x, y) => {
+                            this.isDrawing = false;
+                            this.updateTouchDisplay(x, y, false);
+                            this.addExplosion(x, y, this.colors.touch, 12);
+
+                            setTimeout(() => {
+                                this.touchActive = false;
+                                this.updateTouchStatus(false);
+                            }, 1000);
+                        },
+
+                        // Gamepad events
+                        onGamepadConnected: (event) => {
+                            this.updateGamepadDisplay(true);
+                        },
+
+                        onGamepadButton: (buttonIndex) => {
+                            document.getElementById('gamepadButton').textContent = `Button ${buttonIndex}`;
+
+                            // Create gamepad effect
+                            const x = Math.random() * this.canvas.width;
+                            const y = Math.random() * this.canvas.height;
+                            this.addExplosion(x, y, this.colors.gamepad, 20);
+                        },
+
+                        onGamepadAxis: (axisData) => {
+                            const { leftStick, rightStick } = axisData;
+
+                            document.getElementById('leftStick').textContent = `${leftStick.x.toFixed(2)}, ${leftStick.y.toFixed(2)}`;
+                            document.getElementById('rightStick').textContent = `${rightStick.x.toFixed(2)}, ${rightStick.y.toFixed(2)}`;
+
+                            // Create stick movement effects
+                            if (Math.abs(leftStick.x) > 0.5 || Math.abs(leftStick.y) > 0.5) {
+                                const x = this.canvas.width * 0.3 + leftStick.x * 100;
+                                const y = this.canvas.height * 0.5 + leftStick.y * 100;
+                                this.addParticle(x, y, this.colors.gamepad, 'gamepad-left');
+                            }
+
+                            if (Math.abs(rightStick.x) > 0.5 || Math.abs(rightStick.y) > 0.5) {
+                                const x = this.canvas.width * 0.7 + rightStick.x * 100;
+                                const y = this.canvas.height * 0.5 + rightStick.y * 100;
+                                this.addParticle(x, y, this.colors.gamepad, 'gamepad-right');
+                            }
+                        },
+                    };
+
+                    this.input.subscribe(inputHandler);
+                }
+
+                addParticle(x, y, color, type, size = 5) {
+                    this.particles.push({
+                        x,
+                        y,
+                        vx: (Math.random() - 0.5) * 4,
+                        vy: (Math.random() - 0.5) * 4,
+                        size: size + Math.random() * 10,
+                        color,
+                        type,
+                        life: 1.0,
+                        decay: 0.005 + Math.random() * 0.01,
+                    });
+
+                    // Limit particles
+                    if (this.particles.length > this.maxParticles) {
+                        this.particles.shift();
+                    }
+                }
+
+                addTrail(x1, y1, x2, y2, color) {
+                    this.trails.push({
+                        x1,
+                        y1,
+                        x2,
+                        y2,
+                        color,
+                        life: 1.0,
+                        decay: 0.02,
+                    });
+
+                    if (this.trails.length > this.maxTrails) {
+                        this.trails.shift();
+                    }
+                }
+
+                addExplosion(x, y, color, count) {
+                    for (let i = 0; i < count; i++) {
+                        const angle = (Math.PI * 2 * i) / count;
+                        const speed = 3 + Math.random() * 5;
+                        this.particles.push({
+                            x,
+                            y,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            size: 3 + Math.random() * 8,
+                            color,
+                            type: 'explosion',
+                            life: 1.0,
+                            decay: 0.008 + Math.random() * 0.012,
+                        });
+                    }
+                }
+
+                updateParticles() {
+                    this.particles = this.particles.filter((particle) => {
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        particle.vx *= 0.99;
+                        particle.vy *= 0.99;
+                        particle.life -= particle.decay;
+                        particle.size *= 0.995;
+
+                        return particle.life > 0 && particle.size > 0.1;
+                    });
+
+                    this.trails = this.trails.filter((trail) => {
+                        trail.life -= trail.decay;
+                        return trail.life > 0;
+                    });
+                }
+
+                drawParticles() {
+                    // Draw trails first
+                    this.trails.forEach((trail) => {
+                        this.ctx.globalAlpha = trail.life * 0.6;
+                        this.ctx.strokeStyle = trail.color;
+                        this.ctx.lineWidth = 3;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(trail.x1, trail.y1);
+                        this.ctx.lineTo(trail.x2, trail.y2);
+                        this.ctx.stroke();
+                    });
+
+                    // Draw particles
+                    this.particles.forEach((particle) => {
+                        this.ctx.globalAlpha = particle.life;
+                        this.ctx.fillStyle = particle.color;
+                        this.ctx.beginPath();
+                        this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                        this.ctx.fill();
+
+                        // Add glow effect
+                        this.ctx.shadowBlur = 20;
+                        this.ctx.shadowColor = particle.color;
+                        this.ctx.fill();
+                        this.ctx.shadowBlur = 0;
+                    });
+
+                    this.ctx.globalAlpha = 1;
+                }
+
+                // UI Update methods
+                updateMouseDisplay(x, y) {
+                    document.getElementById('mousePos').textContent = `${Math.round(x)}, ${Math.round(y)}`;
+                    this.updateMouseStatus(true);
+                }
+
+                updateMouseButtons(buttonText) {
+                    document.getElementById('mouseButtons').textContent = buttonText;
+                }
+
+                updateMouseStatus(active) {
+                    const status = document.getElementById('mouseStatus');
+                    const text = document.getElementById('mouseStatusText');
+                    if (active) {
+                        status.className = 'status-indicator status-active';
+                        text.textContent = 'Active';
+                    } else {
+                        status.className = 'status-indicator status-inactive';
+                        text.textContent = 'Inactive';
+                    }
+                }
+
+                updateKeyboardDisplay() {
+                    const activeKeysArray = Array.from(this.activeKeys);
+                    document.getElementById('activeKeys').textContent = activeKeysArray.length > 0 ? activeKeysArray.join(', ') : 'None';
+                    document.getElementById('lastKey').textContent = this.lastKey;
+                    this.updateKeyboardStatus(true);
+                }
+
+                updateKeyboardStatus(active) {
+                    const status = document.getElementById('keyboardStatus');
+                    const text = document.getElementById('keyboardStatusText');
+                    if (active) {
+                        status.className = 'status-indicator status-active';
+                        text.textContent = 'Active';
+                    } else {
+                        status.className = 'status-indicator status-inactive';
+                        text.textContent = 'Inactive';
+                    }
+                }
+
+                updateTouchDisplay(x, y, active) {
+                    document.getElementById('touchPos').textContent = active ? `${Math.round(x)}, ${Math.round(y)}` : 'None';
+                    document.getElementById('touchActive').textContent = active ? 'Yes' : 'No';
+                    this.updateTouchStatus(active);
+                }
+
+                updateTouchStatus(active) {
+                    const status = document.getElementById('touchStatus');
+                    const text = document.getElementById('touchStatusText');
+                    if (active) {
+                        status.className = 'status-indicator status-active';
+                        text.textContent = 'Active';
+                    } else {
+                        status.className = 'status-indicator status-inactive';
+                        text.textContent = 'Inactive';
+                    }
+                }
+
+                updateGamepadDisplay(connected) {
+                    document.getElementById('gamepadConnected').textContent = connected ? 'Yes' : 'No';
+                    if (connected && this.input.gamepad) {
+                        document.getElementById('gamepadConnected').textContent = `Yes (${this.input.gamepad.id})`;
+                    }
+                }
+
+                updateFPS() {
+                    this.frameCount++;
+                    const now = performance.now();
+                    if (now - this.lastFpsTime >= 1000) {
+                        this.fps = Math.round((this.frameCount * 1000) / (now - this.lastFpsTime));
+                        document.getElementById('fpsCounter').textContent = `FPS: ${this.fps}`;
+                        this.frameCount = 0;
+                        this.lastFpsTime = now;
+                    }
+                }
+
+                render() {
+                    // Clear canvas with fade effect
+                    this.ctx.fillStyle = 'rgba(26, 26, 46, 0.1)';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                    // Draw background grid
+                    this.drawGrid();
+
+                    // Draw all visual effects
+                    this.drawParticles();
+
+                    // Draw input indicators
+                    this.drawInputIndicators();
+                }
+
+                drawInputIndicators() {
+                    const padding = 20;
+                    const indicatorSize = 15;
+
+                    // Mouse indicator
+                    if (this.mouseActive) {
+                        this.ctx.fillStyle = this.colors.mouse;
+                        this.ctx.fillRect(padding, padding, indicatorSize, indicatorSize);
+                        this.ctx.fillStyle = 'white';
+                        this.ctx.font = '14px Arial';
+                        this.ctx.fillText('Mouse', padding + indicatorSize + 10, padding + indicatorSize - 2);
+                    }
+
+                    // Keyboard indicator
+                    if (this.keyboardActive) {
+                        this.ctx.fillStyle = this.colors.keyboard;
+                        this.ctx.fillRect(padding, padding + 25, indicatorSize, indicatorSize);
+                        this.ctx.fillStyle = 'white';
+                        this.ctx.fillText('Keyboard', padding + indicatorSize + 10, padding + 25 + indicatorSize - 2);
+                    }
+
+                    // Touch indicator
+                    if (this.touchActive) {
+                        this.ctx.fillStyle = this.colors.touch;
+                        this.ctx.fillRect(padding, padding + 50, indicatorSize, indicatorSize);
+                        this.ctx.fillStyle = 'white';
+                        this.ctx.fillText('Touch', padding + indicatorSize + 10, padding + 50 + indicatorSize - 2);
+                    }
+
+                    // Gamepad indicator
+                    if (this.input.gamepad) {
+                        this.ctx.fillStyle = this.colors.gamepad;
+                        this.ctx.fillRect(padding, padding + 75, indicatorSize, indicatorSize);
+                        this.ctx.fillStyle = 'white';
+                        this.ctx.fillText('Gamepad', padding + indicatorSize + 10, padding + 75 + indicatorSize - 2);
+                    }
+                }
+
+                gameLoop() {
+                    // Update input system
+                    this.input.update();
+
+                    // Update game objects
+                    this.updateParticles();
+
+                    // Render everything
+                    this.render();
+
+                    // Update FPS counter
+                    this.updateFPS();
+
+                    // Continue loop
+                    requestAnimationFrame(() => this.gameLoop());
+                }
+
+                startGameLoop() {
+                    console.log('MarkJSInput Test Application Started!');
+                    this.gameLoop();
+                }
+            }
+
+            // Initialize the test application when page loads
+            window.addEventListener('load', () => {
+                new TestApplication();
+            });
+        </script>
+    </body>
+</html>
