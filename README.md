@@ -58,7 +58,7 @@ gameLoop();
 
 🎮 **Interactive test application**: Open `index.html` in your browser to see MarkJSInput in action with real-time input visualization and testing of all supported input methods.
 
-![MarkJSInputShowcase](https://github.com/user-attachments/assets/f9afdb90-ab55-4c52-9b00-82c476bd66d1)
+<img width="1827" height="1058" alt="image" src="https://github.com/user-attachments/assets/691a7437-610a-46d0-a3fc-58443a75c290" />
 
 ## Browser Support
 
