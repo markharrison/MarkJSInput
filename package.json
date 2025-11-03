@@ -1,26 +1,26 @@
 {
-    "name": "@markharrison/markjsinput",
-    "version": "0.0.0",
-    "description": "A reusable input system for canvas applications.",
-    "main": "markjsinput.js",
-    "exports": {
-        ".": "./markjsinput.js",
-        "./markjsinput": "./markjsinput.js"
-    },
-    "files": [
-        "markjsinput.js",
-        "markjsinput.md",
-        "README.md",
-        "LICENSE"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/markharrison/MarkJSInput.git"
-    },
-    "author": "Mark Harrison",
-    "license": "MIT",
-    "publishConfig": {
-        "registry": "https://registry.npmjs.org/",
-        "access": "public"
-    }
+  "name": "@markharrison/markjsinput",
+  "version": "1.20251103.1",
+  "description": "A reusable input system for canvas applications.",
+  "main": "markjsinput.js",
+  "exports": {
+    ".": "./markjsinput.js",
+    "./markjsinput": "./markjsinput.js"
+  },
+  "files": [
+    "markjsinput.js",
+    "markjsinput.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/markharrison/MarkJSInput.git"
+  },
+  "author": "Mark Harrison",
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  }
 }
