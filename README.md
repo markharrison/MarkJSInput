@@ -1,6 +1,7 @@
 # MarkJSInput
  
 [![npm version](https://img.shields.io/npm/v/%40markharrison%2Fmarkjsinput)](https://www.npmjs.com/package/@markharrison/markjsinput)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A lightweight, generic input handler for HTML Canvas applications that captures keyboard, mouse, touch, and gamepad input using a publisher-subscriber pattern.
 
