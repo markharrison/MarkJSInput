@@ -1,6 +1,6 @@
 {
   "name": "@markharrison/markjsinput",
-  "version": "1.20251103.1",
+  "version": "1.20251104.2",
   "description": "A reusable input system for canvas applications.",
   "main": "markjsinput.js",
   "exports": {
